@@ -13,6 +13,34 @@ let connector = new builder.ChatConnector({
 
 server.post('/api/messages', connector.listen());
 
-let bot = new builder.UniversalBot(connector, function (session) {
-    session.send("You said: %s", session.message.text);
+let bot = new builder.UniversalBot(connector);
+
+function sendProactiveMessage(address) {
+    var msg = new builder.Message().address(address);
+    msg.text('We are good to go.');
+    msg.textLocale('en-US');
+    bot.send(msg);
+}
+
+server.get('/api/CustomWebApi', (req, res, next) => {
+        sendProactiveMessage(savedAddress);
+        res.send('triggered');
+        next();
+    }
+);
+
+bot.dialog('/', function(session, args) {
+
+    let savedAddress = session.message.address;
+
+    var message = 'Hello! This is Kevin\'s bot.';
+    session.send(message);
+
+    message = 'You can also make me send a message by accessing: ';
+    message += 'http://localhost:' + server.address().port + '/api/CustomWebApi';
+    session.send(message);
+
+    setTimeout(() => {
+        sendProactiveMessage(savedAddress);
+    }, 5000);
 });
